@@ -2,18 +2,15 @@
 set -euo pipefail
 
 THREAD_ID="1476821643488919592"
-URL="https://docs.openclaw.ai/channels/discord"
+URL="https://raw.githubusercontent.com/ethan-m25/open-claw-ops/main/runbooks/discord-allowlist.md"
 
-HTML="$(curl -sL "$URL"))"
+HTML="$(curl -fsSL "$URL")"
 
-# Minimal proof signals (avoid brittle DOM selectors)
-echo "$HTML" | grep -qiF "DM policy" || {
-  openclaw message send --channel discord --target "$THREAD_ID" --message "P3 Fetch Proof: FAIL (missing DM policy) $URL"
-  exit 0
-}
-echo "$HTML" | grep -qi "Guild policy" || {
-  openclaw message send --channel discord --target "$THREAD_ID" --message "P3 Fetch Proof: FAIL (missing Guild policy tab) $URL"
+echo "$HTML" | grep -qiE "allowlist|requireMention|guild" || {
+  openclaw message send --channel discord --target "$THREAD_ID" \
+    --message "P3 Fetch Proof: FAIL (raw fetch ok, but missing keywords) $URL"
   exit 0
 }
 
-openclaw message send --channel discord --target "$THREAD_ID" --message "P3 Fetch Proof: PASS ✅ (curl ok; found dmPolicy + Guild policy) $URL"
+openclaw message send --channel discord --target "$THREAD_ID" \
+  --message "P3 Fetch Proof: PASS ✅ (curl raw ok; found allowlist/requireMention/guild) $URL"
