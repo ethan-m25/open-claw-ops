@@ -20,7 +20,8 @@ BACKLOG_FILE="${REPO_DIR}/BACKLOG.md"
 # Script reads truth source and injects as plain text (agent needs no fs tool)
 BACKLOG_TEXT="$(sed -n '1,200p' "$BACKLOG_FILE" | sed 's/`/\\`/g')"
 
-OUT="$(openclaw agent --to "discord:${THREAD_ID}" --message "AUTO Backlog Sweep（不执行变更，SOURCE=BACKLOG_MD_TEXT）：
+NEXT_ACTION_FILE="/next-action-latest.txt"
+OUT="20 20 12 61 100 701 702openclaw agent --to "discord:${THREAD_ID}" --message "AUTO Backlog Sweep（不执行变更，SOURCE=BACKLOG_MD_TEXT）：
 以下是本次 Sweep 的真相源 BACKLOG.md（截取前200行）：
 <<<
 ${BACKLOG_TEXT}
@@ -31,6 +32,9 @@ ${BACKLOG_TEXT}
 if echo "$OUT" | grep -qiE "rate limit|cooldown|All models failed"; then
   openclaw message send --channel discord --target "${THREAD_ID}" --message "Heartbeat AUTO Sweep: skipped (provider cooldown/rate_limit)."
 else
+  printf "%s
+" "" | sed '/^DELIVER_DEBUG=1
+d' | sed -n '1,200p' > "" || true
   openclaw message send --channel discord --target "${THREAD_ID}" --message "MEMORY CHECK: 如果今天产生了稳定决策（策略/护栏/固定配置变更），请在 open-claw-ops/MEMORY.md 追加一条。"
   openclaw message send --channel discord --target "${THREAD_ID}" --message "$(echo "$OUT" | sed '/^DELIVER_DEBUG=1$/d' | sed -n '1,140p')"
 fi
