@@ -1,1 +1,2 @@
 10 21 * * * bash ~/open-claw-ops/ops/backlog-sweep.sh
+20 21 * * 0 bash ~/open-claw-ops/ops/memory-weekly-propose.sh >/dev/null 2>&1
