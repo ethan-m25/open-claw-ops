@@ -6,3 +6,5 @@
 风险：若把 dmPolicy 设为 open 或 allowFrom 误配（如放开 "*"），会扩大未授权消息面；另需留意 guild/channel 级覆盖顺序。
 回滚：移除/收紧对应 guilds.<id> 与 allowFrom 项，或将 dmPolicy 回退到 pairing，然后 openclaw gateway restart 使配置生效。
 下一步：先在测试服只放行 1 个 guild + 1 个用户做 canary，验证通过后再扩展到生产频道。
+
+## 2026-02-28 P0-S2 GitHub Read-only (KISAME_OK)
