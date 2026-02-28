@@ -21,3 +21,13 @@ Reduce multi-user risk without Docker by tightening tool exposure while keeping 
 ## Rollback
 - Restore ~/.openclaw/openclaw.json.bak.<timestamp>
 - openclaw gateway restart
+
+## Evidence (2026-02-28)
+Status finding: security.trust_model.multi_user_heuristic (warn)
+Key notes from status:
+- Discord group entry enabled (allowlist + group targets)
+- No unguarded runtime/process tools detected
+- No unguarded runtime/filesystem contexts detected
+
+## Decision
+Treat as P1/Backlog only. No further hardening now to avoid reintroducing Docker/sandbox dependency and blocking core automation.
