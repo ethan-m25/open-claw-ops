@@ -1,25 +1,22 @@
 # P1 multi_user_heuristic hardening (non-Docker) — PLAN
 
 ## Goal
-Reduce multi-user risk without Docker: deny risky tools for non-allowlisted users while keeping normal allowlisted ops.
+Reduce multi-user risk without Docker by tightening tool exposure while keeping normal allowlisted ops working.
 
-## Non-goals (for now)
-- No changes to network exposure (keep loopback-only)
-- No new web/runtime/fs permissions
-- No Docker dependency
+## Current baseline (as of v0.6)
+- gateway.bind = loopback only
+- Discord: allowlist + requireMention
+- Heartbeat: cron runs ops/backlog-sweep.sh daily
 
-## Proposed approach (draft)
-- Use tools.profile / tools.deny as the primary guardrail.
-- Keep Discord allowlist + requireMention unchanged.
-- Validate by ensuring:
-  1) openclaw status no longer flags security.trust_model.multi_user_heuristic (or meaningfully reduced)
-  2) Non-allowlist cannot invoke fs/runtime
-  3) Allowlist can still run intended ops (message-only)
+## Plan (draft)
+1) Define a strict global tools baseline (messaging-only).
+2) Allowlist-specific exceptions (if needed) with explicit commands only.
+3) Verify multi_user_heuristic warning is reduced/removed.
+4) Record changes + rollback in ops repo.
 
 ## DoD
-- Document exact config keys + commands + rollback
-- Canary in test thread first
-- Record change in skills-audit.md and ops-changelog.md
+- Exact config keys + commands + rollback steps documented
+- Canary in test thread first, then promote to STABLE
 
 ## Rollback
 - Restore ~/.openclaw/openclaw.json.bak.<timestamp>
