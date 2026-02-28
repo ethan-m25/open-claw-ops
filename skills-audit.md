@@ -10,3 +10,5 @@ Date | Skill | Mode (Browser-only/Canary/Stable) | Scope (channels) | Provider |
 2026-02-28 | P0-S2 GitHub Read-only | CANARY-PASS (text-in-thread fallback) | #workshop | open-claw-ops (SSH) | repo read | N/A | README: P0-S2 KISAME_OK section | Paste text (no URL fetch) fallback
 
 2026-02-28 | Heartbeat Backlog Sweep | STABLE (cron runs script) | #command-center thread(1476821643488919592) | local (cron + openclaw agent) | message.read + message.send only | N/A | ops/backlog-sweep.sh + ops/crontab.txt | crontab -l | grep -v backlog-sweep.sh | crontab -
+
+2026-02-28 | Backlog Sweep Output Sanitizer | STABLE | #command-center thread(1476821643488919592) | local (script filter) | N/A | N/A | ops/backlog-sweep.sh (strip DELIVER_DEBUG) | git revert <commit> to undo
