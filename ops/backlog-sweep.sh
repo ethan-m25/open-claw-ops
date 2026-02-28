@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+LOCKFILE="/tmp/openclaw-backlog-sweep.lock"
+exec 9>""
+if ! flock -n 9; then
+  exit 0
+fi
+
+
 THREAD_ID="1476821643488919592"
 
 # Run one agent turn (may fail during provider cooldown / rate_limit)
