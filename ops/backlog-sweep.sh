@@ -2,11 +2,10 @@
 set -euo pipefail
 
 LOCKFILE="/tmp/openclaw-backlog-sweep.lock"
-exec 9>""
+exec 9>"$LOCKFILE"
 if ! flock -n 9; then
   exit 0
 fi
-
 
 THREAD_ID="1476821643488919592"
 
@@ -17,7 +16,6 @@ OUT="$(openclaw agent --to "discord:${THREAD_ID}" --message "AUTO Backlog Sweep�
 if echo "$OUT" | grep -qiE "rate limit|cooldown|All models failed"; then
   openclaw message send --channel discord --target "${THREAD_ID}" --message "Heartbeat AUTO Sweep: skipped (provider cooldown/rate_limit)."
 else
-  openclaw message send --channel discord --target "" --message "MEMORY CHECK: 如果今天产生了稳定决策（策略/护栏/固定配置变更），请在 open-claw-ops/MEMORY.md 追加一条。"
-
-openclaw message send --channel discord --target "${THREAD_ID}" --message "$(echo "$OUT" | sed -n '1,120p')"
+  openclaw message send --channel discord --target "${THREAD_ID}" --message "MEMORY CHECK: 如果今天产生了稳定决策（策略/护栏/固定配置变更），请在 open-claw-ops/MEMORY.md 追加一条。"
+  openclaw message send --channel discord --target "${THREAD_ID}" --message "$(echo "$OUT" | sed -n '1,120p')"
 fi
