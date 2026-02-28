@@ -2,22 +2,23 @@
 set -euo pipefail
 
 LOCKFILE="/tmp/openclaw-backlog-sweep.lock"
-# macOS: use shlock (built-in) for single-instance locking
 if ! shlock -f "$LOCKFILE" -p $$; then
   exit 0
 fi
 trap 'rm -f "$LOCKFILE"' EXIT
 
 THREAD_ID="1476821643488919592"
-# Post a Discord alert if the script errors (keep it short)
-trap 'openclaw message send --channel discord --target "${THREAD_ID}" --message "Heartbeat ERROR: backlog-sweep.sh failed (see ~/.openclaw/ops-logs latest)."' ERR
 
 # Local status snapshot (no git)
 LOGDIR="${HOME}/.openclaw/ops-logs"
 mkdir -p "$LOGDIR" || true
 openclaw status --all 2>&1 | tail -n 120 > "$LOGDIR/status-$(date +%Y%m%d-%H%M%S).txt" || true
 
-OUT="$(openclaw agent --to "discord:${THREAD_ID}" --message "AUTO Backlog Sweep（不执行变更）：请读取该 thread 最近消息（openclaw message read --channel discord --target ${THREAD_ID} --limit 30），定位包含 'Checkpoint v0.5' 或 'Backlog' 的那条，然后只输出 1 条【下一步唯一动作】：目的/操作/验证/回滚。" --deliver 2>&1 || true)"
+# Repo truth source
+REPO_DIR="${HOME}/open-claw-ops"
+BACKLOG_FILE="${REPO_DIR}/BACKLOG.md"
+
+OUT="$(openclaw agent --to "discord:${THREAD_ID}" --message "AUTO Backlog Sweep（不执行变更，SOURCE=BACKLOG_MD）：请读取本机文件 ${BACKLOG_FILE}（真相源），只挑 1 条最阻塞/最有价值项，输出 1 条【下一步唯一动作】：目的/操作/验证/回滚。不要执行任何变更。" --deliver 2>&1 || true)"
 
 if echo "$OUT" | grep -qiE "rate limit|cooldown|All models failed"; then
   openclaw message send --channel discord --target "${THREAD_ID}" --message "Heartbeat AUTO Sweep: skipped (provider cooldown/rate_limit)."
