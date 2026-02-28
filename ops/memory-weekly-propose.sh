@@ -38,3 +38,5 @@ OUTFILE="proposals/memory-proposal-$(date +%Y%m%d-%H%M%S).md"
 } > "$OUTFILE"
 
 echo "$OUTFILE"
+THREAD_ID="1476821643488919592"
+openclaw message send --channel discord --target "" --message "MEMORY PROPOSAL READY:  (review + manually apply to MEMORY.md if desired)" || true
