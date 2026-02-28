@@ -4,7 +4,7 @@ set -euo pipefail
 THREAD_ID="1476821643488919592"
 URL="https://docs.openclaw.ai/channels/discord"
 
-HTML="$(curl -sL "$URL" | head -n 2000)"
+HTML="$((curl -sL "$URL"))"
 
 # Minimal proof signals (avoid brittle DOM selectors)
 echo "$HTML" | grep -qi "channels.discord.dmPolicy" || {
