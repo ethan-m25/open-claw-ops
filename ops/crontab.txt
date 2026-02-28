@@ -1,1 +1,1 @@
-10 21 * * * openclaw message send --channel discord --target 1476821643488919592 --message "<@1476752231121555546> Heartbeat: Backlog Sweep only（基于 Checkpoint v0.5 Backlog 仅挑1条最阻塞项，输出下一步唯一动作；不执行任何配置变更；保持Discord allowlist+requireMention不变；不启用docker/runtime/fs/web工具）"
+10 21 * * * openclaw message send --channel discord --target 1476821643488919592 --message "<@1476752231121555546> Heartbeat: Backlog Sweep (placeholder). 请打开本 thread 的 pinned Checkpoint v0.5 → Backlog，挑 1 条作为下一步唯一动作（不执行变更）。"
