@@ -7,8 +7,8 @@ URL="https://docs.openclaw.ai/channels/discord"
 HTML="$(curl -sL "$URL"))"
 
 # Minimal proof signals (avoid brittle DOM selectors)
-echo "$HTML" | grep -qi "channels.discord.dmPolicy" || {
-  openclaw message send --channel discord --target "$THREAD_ID" --message "P3 Fetch Proof: FAIL (missing channels.discord.dmPolicy) $URL"
+echo "$HTML" | grep -qiF "DM policy" || {
+  openclaw message send --channel discord --target "$THREAD_ID" --message "P3 Fetch Proof: FAIL (missing DM policy) $URL"
   exit 0
 }
 echo "$HTML" | grep -qi "Guild policy" || {
