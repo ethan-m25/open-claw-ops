@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+THREAD_ID="1476821643488919592"
 
 REPO_DIR="${HOME}/open-claw-ops"
 cd "$REPO_DIR"
@@ -39,4 +40,4 @@ OUTFILE="proposals/memory-proposal-$(date +%Y%m%d-%H%M%S).md"
 
 echo "$OUTFILE"
 THREAD_ID="1476821643488919592"
-openclaw message send --channel discord --target "" --message "MEMORY PROPOSAL READY:  (review + manually apply to MEMORY.md if desired)" || true
+openclaw message send --channel discord --target "${THREAD_ID}" --message "MEMORY PROPOSAL READY: ${OUTFILE} (review + manually apply to MEMORY.md if desired)" || true
