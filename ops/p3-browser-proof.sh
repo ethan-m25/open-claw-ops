@@ -14,7 +14,7 @@ trap 'rm -f "$LOCKFILE"' EXIT
 openclaw browser navigate --browser-profile openclaw "https://docs.openclaw.ai/channels/discord#recommended-set-up-a-guild-workspace" >/dev/null
 openclaw browser snapshot --browser-profile openclaw --efficient --limit 800 > /tmp/p3-eff.txt
 
-REF="$(grep -n 'tab "Guild policy"' /tmp/p3-eff.txt | head -n 1 | sed -n 's/.*\[ref=\([a-z0-9]\+\)\].*/\1/p')"
+REF="20 20 12 61 100 701 702grep -nEi "guild policy" /tmp/p3-eff.txt | head -n 1 | sed -n 's/.*\[ref=\([a-z0-9]\+\)\].*/\1/p' )"
 if [[ -z "${REF:-}" ]]; then
   openclaw message send --channel discord --target "${THREAD_ID}" --message "P3 Browser Proof: FAIL (could not find Guild policy tab ref)."
   exit 0
