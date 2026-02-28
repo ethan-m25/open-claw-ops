@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.25",
+    "lastTouchedAt": "2026-02-28T05:01:45.615Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-27T00:56:47.643Z",
+    "lastRunVersion": "2026.2.25",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
+  "auth": "__REDACTED__",
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "openai-codex/gpt-5.3-codex",
+        "fallbacks": [
+          "openai-codex/gpt-5.3-codex"
+        ]
+      },
+      "models": {
+        "openai-codex/gpt-5.3-codex": {},
+        "openai/gpt-5-chat-latest": {},
+        "openai/o3-mini": {}
+      },
+      "workspace": "/Users/clawii/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      },
+      "sandbox": {
+        "mode": "off"
+      }
+    },
+    "list": [
+      {
+        "id": "main"
+      },
+      {
+        "id": "itachi",
+        "name": "itachi",
+        "workspace": "/Users/clawii/.openclaw/workspace-itachi",
+        "agentDir": "/Users/clawii/.openclaw/agents/itachi/agent",
+        "model": "openai-codex/gpt-5.3-codex"
+      },
+      {
+        "id": "kisame",
+        "name": "kisame",
+        "workspace": "/Users/clawii/.openclaw/workspace-kisame",
+        "agentDir": "/Users/clawii/.openclaw/agents/kisame/agent",
+        "model": "openai-codex/gpt-5.3-codex"
+      },
+      {
+        "id": "zetsu",
+        "name": "zetsu",
+        "workspace": "/Users/clawii/.openclaw/workspace-zetsu",
+        "agentDir": "/Users/clawii/.openclaw/agents/zetsu/agent",
+        "model": "openai-codex/gpt-5.3-codex"
+      }
+    ]
+  },
+  "tools": {
+    "profile": "messaging",
+    "fs": {
+      "workspaceOnly": true
+    }
+  },
+  "bindings": [
+    {
+      "agentId": "itachi",
+      "match": {
+        "channel": "discord",
+        "peer": {
+          "kind": "channel",
+          "id": "1476773906038919168"
+        }
+      }
+    },
+    {
+      "agentId": "kisame",
+      "match": {
+        "channel": "discord",
+        "peer": {
+          "kind": "channel",
+          "id": "1476773993989275800"
+        }
+      }
+    },
+    {
+      "agentId": "zetsu",
+      "match": {
+        "channel": "discord",
+        "peer": {
+          "kind": "channel",
+          "id": "1476800119381950514"
+        }
+      }
+    }
+  ],
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "channels": {
+    "discord": {
+      "name": "clawii-main",
+      "enabled": true,
+      "token": "__REDACTED__",
+      "groupPolicy": "allowlist",
+      "streaming": "off",
+      "guilds": {
+        "1476058236703473909": {
+          "requireMention": true,
+          "channels": {
+            "1476773906038919168": {
+              "allow": true
+            },
+            "1476773993989275800": {
+              "allow": true
+            },
+            "1476800119381950514": {
+              "allow": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": "__REDACTED__",
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "nodes": {
+      "denyCommands": []
+    }
+  },
+  "plugins": {
+    "entries": {
+      "discord": {
+        "enabled": true
+      }
+    }
+  }
+}
