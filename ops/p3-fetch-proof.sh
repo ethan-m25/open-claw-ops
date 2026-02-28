@@ -2,26 +2,25 @@
 set -euo pipefail
 
 THREAD_ID="1476821643488919592"
-URL="https://raw.githubusercontent.com/ethan-m25/open-claw-ops/main/runbooks/discord-allowlist.md"
+OWNER="ethan-m25"
+REPO="open-claw-ops"
+PATH_IN_REPO="contracts/masterplan-v0.7-part1.md"
+REF="main"
 
-# Load token if you keep it in ~/.openclaw/.env (safe: file perms 600)
-if [ -z "${GITHUB_TOKEN:-}" ] && [ -f "$HOME/.openclaw/.env" ]; then
-  # only export the one we need
-  export GITHUB_TOKEN="$(grep -E '^GITHUB_TOKEN=' "$HOME/.openclaw/.env" | head -n1 | cut -d= -f2- || true)"
-fi
+: "${GITHUB_TOKEN:?missing GITHUB_TOKEN in environment (expected in ~/.openclaw/.env for gateway)}"
 
-CURL_ARGS=(-fsSL)
-if [ -n "${GITHUB_TOKEN:-}" ]; then
-  CURL_ARGS+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
-fi
+API_URL="https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH_IN_REPO}?ref=${REF}"
 
-HTML="$(curl "${CURL_ARGS[@]}" "$URL")"
+HTML="$(curl -fsSL \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  -H "Accept: application/vnd.github.raw" \
+  "$API_URL")"
 
-echo "$HTML" | grep -qiE "allowlist|requireMention|guild" || {
+echo "$HTML" | grep -qiE "RED|FUSE|下一步唯一动作|Operator Contract" || {
   openclaw message send --channel discord --target "$THREAD_ID" \
-    --message "P3 Fetch Proof: FAIL (fetched, but missing keywords) $URL"
+    --message "P3 Fetch Proof: FAIL (GitHub API fetch ok, but missing expected keywords) ${OWNER}/${REPO}@${REF}:${PATH_IN_REPO}"
   exit 0
 }
 
 openclaw message send --channel discord --target "$THREAD_ID" \
-  --message "P3 Fetch Proof: PASS ✅ (raw fetch ok; found allowlist/requireMention/guild) $URL"
+  --message "P3 Fetch Proof: PASS ✅ (GitHub API raw ok; found policy keywords) ${OWNER}/${REPO}@${REF}:${PATH_IN_REPO}"
