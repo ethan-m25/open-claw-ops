@@ -9,6 +9,8 @@ fi
 trap 'rm -f "$LOCKFILE"' EXIT
 
 THREAD_ID="1476821643488919592"
+# Post a Discord alert if the script errors (keep it short)
+trap 'openclaw message send --channel discord --target "${THREAD_ID}" --message "Heartbeat ERROR: backlog-sweep.sh failed (see ~/.openclaw/ops-logs latest)."' ERR
 
 # Local status snapshot (no git)
 LOGDIR="${HOME}/.openclaw/ops-logs"
