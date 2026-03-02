@@ -111,8 +111,6 @@ When the Discord elevation bug is fixed in a future release:
 **Maintainer:** @itachi  
 **Review cycle:** Monthly (check for upstream fixes)
 
-cat >> RUNBOOK.md <<'EOF'
-
 ## Host Approval Channel (File-based Approvals)
 
 **Goal:** Keep Discord as HQ, but move host-impacting actions to an auditable, rollbackable host approval path.
@@ -132,8 +130,3 @@ cat >> RUNBOOK.md <<'EOF'
 ### Status
 - Created on 2026-03-01
 - Permissions: approvals=700, others=755
-EOF
-
-git add RUNBOOK.md
-git commit -m "docs: add host approval channel protocol"
-git push
