@@ -110,3 +110,30 @@ When the Discord elevation bug is fixed in a future release:
 **Last updated:** 2026‑03‑01  
 **Maintainer:** @itachi  
 **Review cycle:** Monthly (check for upstream fixes)
+
+cat >> RUNBOOK.md <<'EOF'
+
+## Host Approval Channel (File-based Approvals)
+
+**Goal:** Keep Discord as HQ, but move host-impacting actions to an auditable, rollbackable host approval path.
+
+### Directories (source of truth)
+- `~/.openclaw/shared/requests/`  : agents drop execution requests (JSON)
+- `~/.openclaw/shared/approvals/` : OWNER-only approvals (JSON). **chmod 700**
+- `~/.openclaw/shared/ops/`       : execution logs, receipts, hashes
+- `~/.openclaw/shared/artifacts/` : generated deliverables (optional)
+- `~/.openclaw/shared/*_out/`     : existing agent outputs (itachi_out/kisame_out/intel_out)
+
+### Security model
+- Owner (host) writes approvals; agents do not.
+- Kisame acts as Host Executor: executes **only** when a matching approval exists.
+- Itachi/Zetsu never require host privileges; they produce plans/evidence only.
+
+### Status
+- Created on 2026-03-01
+- Permissions: approvals=700, others=755
+EOF
+
+git add RUNBOOK.md
+git commit -m "docs: add host approval channel protocol"
+git push
