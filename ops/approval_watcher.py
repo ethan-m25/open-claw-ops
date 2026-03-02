@@ -38,13 +38,45 @@ def main():
     APPROVALS.mkdir(parents=True, exist_ok=True)
 
     # Skeleton only: execution logic will be added after we define request/approval schema.
+
+# Whitelisted actions (owner-approved only)
+WHITELIST = {
+    "mirror_inbound_media": {
+        "cmd": ["/bin/bash", "/Users/clawii/open-claw-ops/ops/mirror_inbound_media.sh"]
+    }
+}
+
+def run_action(action_type: str):
+    import subprocess
+    spec = WHITELIST.get(action_type)
+    if not spec:
+        return ("REJECTED_UNKNOWN_ACTION", {"action": action_type})
+    try:
+        r = subprocess.run(spec["cmd"], capture_output=True, text=True, timeout=120)
+        return ("EXECUTED_OK" if r.returncode == 0 else "EXECUTED_ERROR", {
+            "action": action_type,
+            "returncode": r.returncode,
+            "stdout": r.stdout[-2000:],
+            "stderr": r.stderr[-2000:]
+        })
+    except Exception as e:
+        return ("EXECUTED_EXCEPTION", {"action": action_type, "error": str(e)})
+
     while True:
         for req in sorted(REQUESTS.glob("*.json")):
             rid = req.stem
             approval = APPROVALS / f"{rid}.approved.json"
             if approval.exists():
-                # Placeholder: do not execute anything yet.
-                receipt = write_receipt(req, "APPROVED_SEEN_NOOP", {"approval": str(approval)})
+                # Execute owner-approved, whitelisted action
+                try:
+                    req_obj = json.loads(req.read_text(encoding="utf-8"))
+                except Exception as e:
+                    receipt = write_receipt(req, "REQUEST_INVALID_JSON", {"error": str(e), "approval": str(approval)})
+                else:
+                    action_type = req_obj.get("type", "noop")
+                    status, detail = run_action(action_type) if action_type != "noop" else ("APPROVED_SEEN_NOOP", {})
+                    detail.update({"approval": str(approval), "request_type": action_type})
+                    receipt = write_receipt(req, status, detail)
                 # Move request aside to avoid repeated processing
                 done_dir = REQUESTS / "_processed"
                 done_dir.mkdir(exist_ok=True)
