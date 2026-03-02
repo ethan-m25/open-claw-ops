@@ -130,3 +130,22 @@ When the Discord elevation bug is fixed in a future release:
 ### Status
 - Created on 2026-03-01
 - Permissions: approvals=700, others=755
+
+### Approved Action: mirror_inbound_media (P0)
+**Problem:** Discord attachments land in `~/.openclaw/media/inbound`, which may be outside agent workspaces when `workspaceOnly=true`.
+**Solution:** Use Host Approval Channel to run a whitelisted action that mirrors inbound images to:
+`~/.openclaw/shared/artifacts/media/`
+
+**Request (owner-approved):**
+- Create: `~/.openclaw/shared/requests/<id>.json`
+  - `{"id":"<id>","type":"mirror_inbound_media"}`
+- Approve: `~/.openclaw/shared/approvals/<id>.approved.json`
+
+**Expected receipt:**
+- `~/.openclaw/shared/ops/receipt.<id>.*.json`
+- `status` should be `EXECUTED_OK`
+- `detail.request_type` should be `mirror_inbound_media`
+
+**Output directory:**
+- `~/.openclaw/shared/artifacts/media/` should contain mirrored `.png/.jpg/...` files.
+
