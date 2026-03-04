@@ -1,151 +1,185 @@
-# Runbook: Discord Elevation Stop-Loss
+# RUNBOOK — open-claw-ops
 
-## Overview
-Due to a known bug in OpenClaw v2026.2.25 where Discord channel identification and permission resolution are unreliable, we are temporarily deactivating the “Discord-triggered elevated” workflow for automated multi-agent tasks.
+运维操作手册。记录 v2 三代理系统的日常操作、写回协议和快照机制。
 
-This runbook documents:
-- The known issues and evidence.
-- The stop‑loss decision.
-- The fallback workflow (Host‑based approval).
-- Rollback criteria (when the bug is fixed).
+**最后更新**：2026-03-03
 
 ---
 
-## Known Issues & Evidence
+## 写回协议（Write-back Protocol）
 
-### 1. Local reproduction
-- `sandbox explain` consistently reports `Elevated channel=(unknown)` for the Discord channel even when `sandbox tools allow=discord` is set.
-- `allowFrom` path evaluation fails, causing sub‑agents to see “channel unknown,” blocking reliable channel‑based elevation.
-- Workaround attempts (runtime=direct + allowFrom) do not resolve the channel‑mapping failure.
+### 原则
+**事件驱动，不做噪声提交。** 以下情况触发写回：
 
-### 2. Community reports (GitHub issues)
-- Issue #xxx (Feb 2026): “elevated unreliable in subagent/sandbox scenarios – drops connection, requires new message to recover.”
-- Issue #yyy (Feb 2026): “allowFrom/authorization resolution bug in Discord snowflake ID handling.”
-- Issue #zzz (Feb 2026): “Discord channel‑ID numeric overflow causing channel‑lookup failures.”
-- These issues collectively block the “Discord‑triggered elevated” automation path for v2026.2.25.
+| 触发条件 | 操作 |
+|---------|------|
+| `ops/` 脚本变更 | kisame `git add ops/ && git commit` |
+| RUNBOOK.md 更新 | kisame `git add RUNBOOK.md && git commit` |
+| 重要系统配置变更（openclaw.json、工具、cron 等） | kisame 记录到 CHANGELOG.md 后提交 |
+| `[STRUCTURAL]` 标记提交 | 自动触发 `structural-YYYYMMDD-HHMMSS` tag + push（pre-commit hook）|
 
-### 3. Operational impact
-- Multi‑agent automation that relies on Discord‑based elevation is **not stable**.
-- This interrupts the planned “three‑agent coordination loop” where:
-  - Itachi dispatches via Discord channel.
-  - Kisame/Zetsu receive tasks and request elevated.
-  - Discord elevation times out or returns unknown.
-  - The loop deadlocks.
+### kisame 标准写回流程
 
----
+```bash
+cd ~/open-claw-ops
 
-## Decision: Stop‑Loss
+# 常规变更
+git add <specific-files>
+git commit -m "ops: <描述变更内容>"
+git push origin main
 
-**Effective date:** 2026‑03‑01  
-**Target version:** OpenClaw v2026.2.25  
-**Status:** 🛑 **Stop‑Loss / Known Issue**
-
-**Decision:**  
-We cease investment in “Discord‑triggered elevated” as the primary automation path for v2026.2.25.  
-We switch to a **Host‑based approval (Terminal/Control UI) + Kisame‑as‑Host‑executor** model.
-
-**Rollback criteria:**  
-When a future OpenClaw version (≥ v2026.3.x) confirms the fixes for:
-1. Discord snowflake ID precision loss.
-2. `allowFrom` path‑evaluation bug.
-3. Sub‑agent elevated channel‑lookup stability.
-
----
-
-## Fallback Workflow (Host‑based)
-
-### 1. Approval channels
-- **Terminal:** Human (`Ethan`) approves via `openclaw approve <task‑id>`.
-- **Control UI:** Human approves via OpenClaw’s web UI (if enabled).
-- **File‑based:** Approval token written to `shared/approvals/`; Kisame polls and executes.
-
-### 2. Kisame as Host‑side executor
-When a task requires elevated host‑side commands (system config, package install, gateway restart):
-```yaml
-agents:
-  kisame:
-    runtime: direct   # runs on host, bypasses sandbox for host‑side actions
-    allowedPaths:
-      - /etc/openclaw
-      - /usr/local/bin
-      - /Users/clawii/.openclaw/config.yaml
+# 重要结构性变更（加 [STRUCTURAL] 标记）
+git add -A
+git commit -m "ops: [STRUCTURAL] <描述>"
+# hook 自动创建 tag 并 push
 ```
 
-### 3. Evidence chain
-All evidence (screenshots, logs, status outputs) must be written to `shared/evidence/` before the final “Done” report.
+### 禁止事项
+- 不每日空提交"daily update"
+- 不提交 `~/.openclaw/` 中的敏感配置（openclaw.json 含密钥）
+- 不提交 `media/` 或 `backups/`
 
-**Example flow:**
+---
+
+## 每周快照（Weekly Snapshot）
+
+**执行人**：kisame（cron 触发）
+**时间**：每周日 09:00
+**脚本**：`~/open-claw-ops/ops/weekly-snapshot.sh`
+
+### 快照内容
+
+每个 agent workspace 的核心 MD 文件快照到：
+
 ```
-shared/
-├── tasks/
-│   ├── todo/task‑123.json
-│   ├── doing/kisame‑task‑123.json
-│   └── done/task‑123‑report.md
-├── evidence/
-│   └── task‑123‑screenshot.png
-└── approvals/
-    └── task‑123‑approved.txt
+snapshots/YYYY-WW/
+├── itachi/   (SOUL.md, TOOLS.md, AGENTS.md, ORCH.md)
+├── kisame/   (SOUL.md, TOOLS.md, AGENTS.md)
+└── zetsu/    (SOUL.md, TOOLS.md, AGENTS.md)
+```
+
+### 手动触发
+
+```bash
+bash ~/open-claw-ops/ops/weekly-snapshot.sh
 ```
 
 ---
 
-## Rollback Steps
+## 系统重启流程
 
-When the Discord elevation bug is fixed in a future release:
-1. **Verify fix:** Confirm channel‑lookup and allowFrom work reliably in `sandbox explain`.
-2. **Update runbook:** Mark this runbook as “archived” and point to new Discord‑based workflow.
-3. **Re‑enable:** Restore `runtime=sandbox` for Kisame/Zetsu; re‑enable Discord‑triggered elevation in config.
-4. **Test:** Run a full three‑agent drill to confirm end‑to‑end flow.
+### 网关重启
+
+```bash
+openclaw gateway restart
+openclaw gateway status
+openclaw agents list
+```
+
+### 环境变量（重启后需验证生效）
+
+`~/.zshenv` 应包含：
+```bash
+export EXA_API_KEY="d0d9614a-58d8-4166-9b27-4ae6b6e2761e"
+export PATH="$HOME/.local/bin:$PATH"
+```
 
 ---
 
-## References
-- [OpenClaw Issue #xxx – Discord elevation unreliable](https://github.com/openclaw/openclaw/issues/xxx)
-- [OpenClaw Issue #yyy – allowFrom path evaluation bug](https://github.com/openclaw/openclaw/issues/yyy)
-- [OpenClaw Issue #zzz – Snowflake ID precision loss](https://github.com/openclaw/openclaw/issues/zzz)
-- Local `memory/2026‑03‑01.md` – “Decision Log: Discord Elevation Stop‑Loss”
+## 备份与恢复
+
+### 立即备份
+
+```bash
+bash ~/.openclaw/skills/openclaw-backup/scripts/backup.sh
+# 输出：~/openclaw-backups/openclaw-YYYY-MM-DD_HHMM.tar.gz（保留最近7份）
+```
+
+### 回滚到最新 STRUCTURAL tag
+
+```bash
+bash ~/open-claw-ops/ops/rollback-to-latest-structural-tag.sh
+```
 
 ---
 
-**Last updated:** 2026‑03‑01  
-**Maintainer:** @itachi  
-**Review cycle:** Monthly (check for upstream fixes)
+## exec 审批操作
 
-## Host Approval Channel (File-based Approvals)
+### 白名单查看
 
-**Goal:** Keep Discord as HQ, but move host-impacting actions to an auditable, rollbackable host approval path.
+```bash
+cat ~/.openclaw/exec-approvals.json
+```
 
-### Directories (source of truth)
-- `~/.openclaw/shared/requests/`  : agents drop execution requests (JSON)
-- `~/.openclaw/shared/approvals/` : OWNER-only approvals (JSON). **chmod 700**
-- `~/.openclaw/shared/ops/`       : execution logs, receipts, hashes
-- `~/.openclaw/shared/artifacts/` : generated deliverables (optional)
-- `~/.openclaw/shared/*_out/`     : existing agent outputs (itachi_out/kisame_out/intel_out)
+### 手动批准
 
-### Security model
-- Owner (host) writes approvals; agents do not.
-- Kisame acts as Host Executor: executes **only** when a matching approval exists.
-- Itachi/Zetsu never require host privileges; they produce plans/evidence only.
+Discord DM 审批按钮点击 "Approve"，或：
+```bash
+safe-exec-approve <request-id>
+```
 
-### Status
-- Created on 2026-03-01
-- Permissions: approvals=700, others=755
+---
 
-### Approved Action: mirror_inbound_media (P0)
-**Problem:** Discord attachments land in `~/.openclaw/media/inbound`, which may be outside agent workspaces when `workspaceOnly=true`.
-**Solution:** Use Host Approval Channel to run a whitelisted action that mirrors inbound images to:
-`~/.openclaw/shared/artifacts/media/`
+## Host Approval Channel（文件式审批）
 
-**Request (owner-approved):**
-- Create: `~/.openclaw/shared/requests/<id>.json`
-  - `{"id":"<id>","type":"mirror_inbound_media"}`
-- Approve: `~/.openclaw/shared/approvals/<id>.approved.json`
+用于 mirror_inbound_media 等白名单动作。
 
-**Expected receipt:**
-- `~/.openclaw/shared/ops/receipt.<id>.*.json`
-- `status` should be `EXECUTED_OK`
-- `detail.request_type` should be `mirror_inbound_media`
+### 目录结构
+- `~/.openclaw/shared/requests/`  — agent 提交请求（JSON）
+- `~/.openclaw/shared/approvals/` — owner 手写审批（chmod 700）
+- `~/.openclaw/shared/ops/`       — 执行日志和收据
 
-**Output directory:**
-- `~/.openclaw/shared/artifacts/media/` should contain mirrored `.png/.jpg/...` files.
+### 已审批动作：mirror_inbound_media
 
+将 Discord 附件从 `~/.openclaw/media/inbound/` 镜像到 `~/.openclaw/shared/artifacts/media/`。
+
+审批流程：
+```bash
+# approval_watcher.py 自动监听并执行白名单动作
+# launchd plist: ~/open-claw-ops/ops/launchd/com.openclaw.approval-watcher.plist
+```
+
+---
+
+## Cron 任务（截至 2026-03-03）
+
+| ID | 说明 | 时间 |
+|----|------|------|
+| `ca90c90d` | itachi 心跳（grok-4.1-fast） | 每日 08:00 |
+| — | 每周快照（kisame exec） | 每周日 09:00 |
+
+```bash
+openclaw cron list
+```
+
+---
+
+## 故障排查
+
+```bash
+# agent 在线状态
+openclaw agents list
+
+# safe-exec 日志
+tail -50 ~/.openclaw/safe-exec-audit.log
+
+# approval_watcher 日志
+tail -50 ~/.openclaw/shared/ops/approval_watcher.log
+
+# 网关端口冲突
+lsof -i :18789
+```
+
+---
+
+## 关键路径速查
+
+| 用途 | 路径 |
+|------|------|
+| OpenClaw 配置 | `~/.openclaw/openclaw.json` |
+| Exec 白名单 | `~/.openclaw/exec-approvals.json` |
+| 本地备份 | `~/openclaw-backups/` |
+| safe-exec 日志 | `~/.openclaw/safe-exec-audit.log` |
+| 共享目录 | `~/.openclaw/shared/` |
+| Discord 媒体 | `~/.openclaw/media/inbound/` |
+| mactop binary | `~/.local/bin/mactop` |
